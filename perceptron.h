@@ -16,7 +16,6 @@ enum status{
 #include <vector>
 #include <random>
 #include <unordered_map>
-#include "potentials.h"
 #include "pcg_random.hpp"
 
 uint32_t kMaxIterations = 10000;
@@ -25,42 +24,44 @@ class perceptron
 {
   public:
     perceptron(uint64_t ID,
-               std::vector<uint64_t> InputConnections,
-               std::vector<uint64_t> OutputConnections,
+               double learningRate,
                uint32_t seed=777,
                uint32_t stream=1);
 
-    //Setters
-    void setInput(uint64_t id, double value);
-
     //Getters
-    inline uint64_t getFID() const { return fID; }
-    inline const std::vector<uint64_t> &getFInputConnections() const { return fInputConnections; }
-    inline const std::vector<uint64_t> &getFOutputConnections() const { return fOutputConnections; }
-    inline const std::vector<double> &getFWeights() const { return fWeights; }
-    inline status getFStatus() const { return fStatus; }
-    inline double getFOutput() const { return fOutput; }
+    inline uint64_t getID() const { return fID; }
+    inline const std::vector<double> &getWeights() const { return fWeights; }
+    inline double getOutput() const { return fOutput; }
+    inline double getWi(uint64_t ID){ return fBckInputs }
+    inline std::vector<double> & getInputs() const { return fFwdInputs; }
+
+    //Setters
+    void setInput(uint64_t senderID, double value);
+    void setCorrection(uint64_t senderID, double value);
 
     //Operative methods
     bool infere();
-    void communicate();
 
     //Train methods
-    void update(double expected);
-    bool check(double expected, double variance);
-    void train(std::vector<std::pair<std::vector<double>,double[2]>> dataSet);
+    void update();
 
   private:
     uint64_t fID;
-    std::vector<uint64_t> fInputConnections;
-    std::vector<double> fInputs;
-    double fOutput;
-    std::vector<uint64_t> fOutputConnections;
+    std::vector<double> fFwdInputs;
+    std::vector<double> fBckInputs;
     std::vector<double> fWeights;
-    status fStatus;
+    double fLearningRate;
+    double fDeltaWeightSum;
+    double fOutput;
+
+
+    pcg32_fast fRNG;
+    std::uniform_real_distribution<double> fDistribution;
+
+    std::unordered_map<uint64_t,uint64_t> fInputIdCorrelationMap;
+    uint64_t fIndex;
+
     uint32_t fIterations;
 };
-
-std::unordered_map<uint64_t,perceptron> globalMap;
 
 #endif //NEURALC_PERCEPTRON_H

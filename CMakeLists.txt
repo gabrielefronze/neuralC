@@ -10,4 +10,6 @@ add_executable(
         potentials.h
         perceptron.h
         perceptron.cxx
+        topology.h
+        topology.cxx
 )

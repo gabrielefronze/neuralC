@@ -6,81 +6,75 @@
 #include "potentials.h"
 
 perceptron::perceptron(uint64_t ID,
-                       std::vector<uint64_t> InputConnections,
-                       std::vector<uint64_t> OutputConnections,
+                       double learningRate,
                        uint32_t seed=777,
                        uint32_t stream=1)
   : fID(ID),
-    fInputConnections(std::move(InputConnections)),
-    fOutputConnections(std::move(OutputConnections)),
-    fStatus(kNotReady),
-    fIterations(0)
+    fLearningRate(learningRate),
+    fIterations(0),
+    fIndex(0),
+    fRNG(seed,stream),
+    fDistribution(0.0,1.0)
 {
-  pcg32_fast myRNG(seed,stream);
-  std::uniform_real_distribution<double> distribution(0.0,1.0);
+  fWeights.push_back(fDistribution(fRNG));
+}
 
-  fInputs = std::vector<double>(fInputConnections.size()+1,0);
 
-  fWeights.reserve(fInputConnections.size()+1);
-  for(auto & itWeights : fWeights){
-    itWeights=distribution(myRNG);
+void perceptron::setInput(uint64_t senderID, double value)
+{
+
+  if(fInputIdCorrelationMap.find(senderID) == fInputIdCorrelationMap.end()){
+    fFwdInputs.push_back(value);
+    fWeights.push_back(fDistribution(fRNG));
+    fInputIdCorrelationMap.emplace(std::make_pair(senderID,fIndex++));
+  } else {
+    fFwdInputs[fInputIdCorrelationMap[senderID]]=value;
   }
 }
 
-void perceptron::setInput(uint64_t id, double value)
+
+void perceptron::setCorrection(uint64_t senderID, double value)
 {
-  auto positionIt = std::find(fInputConnections.begin(),fInputConnections.end(),id);
-  auto index = std::distance(fInputConnections.begin(), positionIt);
-  fInputs[index] = value;
+  fDeltaWeightSum+=value;
 }
 
 bool perceptron::infere()
 {
-  if(fStatus==kReady){
+  auto product=std::inner_product(fFwdInputs.begin(), fFwdInputs.end(),fWeights.begin()+1, 0.0);
+  product+=fWeights[0];
 
-    auto product=std::inner_product(fInputs.begin(), fInputs.end(),fWeights.begin()+1, 0.0);
-    product+=fWeights[0];
+  fOutput=potentials::step(product);
 
-    fOutput=potentials::step(product);
-
-    return true;
-
-  } else return false;
+  return true;
 }
 
-void perceptron::update(double expected)
+void perceptron::update()
 {
-    auto tempInputs = fInputs;
-    std::for_each(tempInputs.begin(), tempInputs.end(), [](int &el){el *= expected; });
-    fWeights[0]+=expected;
-    std::transform (fWeights.begin()+1, fWeights.end(), tempInputs.begin(), fWeights.begin(), std::plus<double>());
+  double quadFwdInputs=std::accumulate(fFwdInputs.begin(),
+                                       fFwdInputs.end(),
+                                       0.,
+                                       [](double sum_so_far, double x)->double {
+                                         return sum_so_far + x * x;
+                                       });
+  double delta=(1-quadFwdInputs)*fDeltaWeightSum;
+  double deltaeta=delta*fLearningRate;
+
+  std::vector<double> correction;
+  correction.push_back(1.);
+  correction.insert(fFwdInputs.begin(),fFwdInputs.end(),correction.end());
+  std::for_each(correction.begin(),correction.end(),[deltaeta](double &el){el *= -deltaeta;});
+  std::transform(fWeights.begin(), fWeights.end(), correction.begin(), fWeights.begin(), std::plus<double>());
+
+  fBckInputs=fWeights;
+  std::for_each(fBckInputs.begin(),fBckInputs.end(),[delta](double &el){el *= delta;});
 }
 
-bool perceptron::check(double expected, double variance)
-{
-  infere();
-  bool isOk = abs(expected-fOutput)<variance;
+//void perceptron::update(double expected)
+//{
+//  fDeltaWeightSum.resize(0);
+//  fDeltaWeightSum.push_back(expected);
+//  fDeltaWeightSum.insert(fFwdInputs.begin(),fFwdInputs.end(),fDeltaWeightSum.end());
+//  std::for_each(fDeltaWeightSum.begin()+1, fDeltaWeightSum.end(), [](double &el){el *= expected;});
+//  std::transform(fWeights.begin(), fWeights.end(), fDeltaWeightSum.begin(), fWeights.begin(), std::plus<double>());
+//}
 
-  if(isOk || fIterations>kMaxIterations) return false;
-  else {
-    update(expected);
-    return true;
-  }
-}
-
-void perceptron::train(std::vector<std::pair<std::vector<double>, double[2]>> dataSet)
-{
-  for(size_t iData=0; iData<dataSet.size(); iData++){
-    if(iData==0) fIterations++;
-    fInputs = dataSet[iData].first;
-    if (check(dataSet[iData].second[0],dataSet[iData].second[1])) iData = 0;
-  }
-}
-
-void perceptron::communicate()
-{
-  for(const auto & itID : fOutputConnections){
-    auto i = globalMap[itID];
-    i.setInput(fID,fOutput);
-  }
-}
