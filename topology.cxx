@@ -89,10 +89,11 @@ void topology::topology::bckPropagate()
   for(auto & itLayers : fLayers){
     for(auto & itSynapse : itLayers.second.fSynapses){
       fLayers[itSynapse.fReceiverID[0]].first[itSynapse.fReceiverID[1]].setInput(itSynapse.fSenderID[1],fLayers[itSynapse.fSenderID[0]].first[itSynapse.fSenderID[1]].getOutput());
+        fLayers[itSynapse.fReceiverID[0]].first[itSynapse.fReceiverID[1]].setCorrection(itSynapse.fSenderID[0],fLayers[itSynapse.fSenderID[0]].first[itSynapse.fSenderID[1]].getCorrection(itSynapse.fSenderID[1]));
     }
 
-    for(auto & itNeurons : itLayers.first.fNeurons){
-
+    for(auto & itNeuron : itLayers.first.fNeurons){
+          itNeuron.update();
     }
   }
 }

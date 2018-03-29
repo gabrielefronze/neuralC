@@ -59,11 +59,11 @@ void perceptron::update()
   double delta=(1-quadFwdInputs)*fDeltaWeightSum;
   double deltaeta=delta*fLearningRate;
 
-  std::vector<double> correction;
-  correction.push_back(1.);
-  correction.insert(fFwdInputs.begin(),fFwdInputs.end(),correction.end());
-  std::for_each(correction.begin(),correction.end(),[deltaeta](double &el){el *= -deltaeta;});
-  std::transform(fWeights.begin(), fWeights.end(), correction.begin(), fWeights.begin(), std::plus<double>());
+
+  fCorrections.push_back(1.);
+  fCorrections.insert(fFwdInputs.begin(),fFwdInputs.end(),fCorrections.end());
+  std::for_each(fCorrections.begin(),fCorrections.end(),[deltaeta](double &el){el *= -deltaeta;});
+  std::transform(fWeights.begin(), fWeights.end(), fCorrections.begin(), fWeights.begin(), std::plus<double>());
 
   fBckInputs=fWeights;
   std::for_each(fBckInputs.begin(),fBckInputs.end(),[delta](double &el){el *= delta;});

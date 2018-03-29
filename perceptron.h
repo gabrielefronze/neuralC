@@ -32,6 +32,7 @@ class perceptron
     inline uint64_t getID() const { return fID; }
     inline const std::vector<double> &getWeights() const { return fWeights; }
     inline double getOutput() const { return fOutput; }
+    inline double getCorrection(uint64_t senderIndex) const { return fCorrections[senderIndex];}
     inline double getWi(uint64_t ID){ return fBckInputs }
     inline std::vector<double> & getInputs() const { return fFwdInputs; }
 
@@ -50,6 +51,7 @@ class perceptron
     std::vector<double> fFwdInputs;
     std::vector<double> fBckInputs;
     std::vector<double> fWeights;
+    std::vector<double> fCorrections;
     double fLearningRate;
     double fDeltaWeightSum;
     double fOutput;
