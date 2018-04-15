@@ -47,11 +47,18 @@ class topology
 {
   public:
     topology(std::vector<uint64_t> neuronsNumber, std::vector<uint64_t[4]> connections);
+
+    explicit topology(uint64_t inputSize, uint64_t nNeurons = 10);
+
+    void train();
+
+    topology &addLayer(uint64_t nNeurons);
+
+private:
+    std::vector<std::pair<neuralLayer, synapseLayer>> fLayers;
+
     void fwdPropagate();
     void bckPropagate();
-
-  private:
-    std::vector<std::pair<neuralLayer,synapseLayer>> fLayers;
 
     uint64_t fFwdDepth;
     uint64_t fBckDepth;

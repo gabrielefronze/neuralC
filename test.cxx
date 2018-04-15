@@ -2,11 +2,12 @@
 // Created by Gabriele Gaetano Fronzé on 06/03/2018.
 //
 
-#include "perceptron.h"
+#include "topology.h"
 
 int main(){
 
-  perceptron perc(1,)
+    topology::topology topology(5);
+    topology.addLayer(5);
 
   return 0;
 }

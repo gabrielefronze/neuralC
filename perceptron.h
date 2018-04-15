@@ -23,17 +23,18 @@ uint32_t kMaxIterations = 10000;
 class perceptron
 {
   public:
-    perceptron(uint64_t ID,
-               double learningRate,
-               uint32_t seed=777,
-               uint32_t stream=1);
+    explicit perceptron(uint64_t ID,
+                        double learningRate = 0.01,
+                        uint32_t seed = 777,
+                        uint32_t stream = 1);
 
     //Getters
     inline uint64_t getID() const { return fID; }
     inline const std::vector<double> &getWeights() const { return fWeights; }
     inline double getOutput() const { return fOutput; }
     inline double getCorrection(uint64_t senderIndex) const { return fCorrections[senderIndex];}
-    inline double getWi(uint64_t ID){ return fBckInputs }
+
+    inline double getWi(uint64_t ID) { return fBckInputs; }
     inline std::vector<double> & getInputs() const { return fFwdInputs; }
 
     //Setters
