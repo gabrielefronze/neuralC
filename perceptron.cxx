@@ -1,86 +1,77 @@
 //
-// Created by Gabriele Gaetano Fronzé on 05/03/2018.
+// Created by Filippo Valle on 17/04/2018.
 //
 
-#include "perceptron.h"
-#include "potentials.h"
+#include "Perceptron.h"
 
-perceptron::perceptron(uint64_t ID,
-                       std::vector<uint64_t> InputConnections,
-                       std::vector<uint64_t> OutputConnections,
-                       uint32_t seed=777,
-                       uint32_t stream=1)
-  : fID(ID),
-    fInputConnections(std::move(InputConnections)),
-    fOutputConnections(std::move(OutputConnections)),
-    fStatus(kNotReady),
-    fIterations(0)
+Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta, theta_function theta_d,
+                       double learningRate, uint64_t seed)
+        :
+        fID(id),
+        fNumOfData(numOfFeatures),
+        fLearningRate(learningRate),
+        fStatus(kReady),
+        fNumOfFeatures(numOfFeatures),
+        fTheta(theta),
+        fTheta_d(theta_d)
 {
-  pcg32_fast myRNG(seed,stream);
-  std::uniform_real_distribution<double> distribution(0.0,1.0);
+    pcg32_fast myRng(seed);
+    std::uniform_int_distribution<double> distribution(0.,1.);
 
-  fInputs = std::vector<double>(fInputConnections.size()+1,0);
+    fW.reserve(fNumOfFeatures+1);
 
-  fWeights.reserve(fInputConnections.size()+1);
-  for(auto & itWeights : fWeights){
-    itWeights=distribution(myRNG);
-  }
+    //add vapnick dimension and random init w
+    for(int i=0;i<fNumOfFeatures+1;i++){
+        fW.push_back(distribution(myRng));
+    }
 }
 
-void perceptron::setInput(uint64_t id, double value)
-{
-  auto positionIt = std::find(fInputConnections.begin(),fInputConnections.end(),id);
-  auto index = std::distance(fInputConnections.begin(), positionIt);
-  fInputs[index] = value;
+void Perceptron::setInput(const std::vector<double> &X) {
+    fInputs.reserve(fNumOfData);
+    for (size_t i = 0; i < fNumOfData; ++i) {
+        fInputs.emplace_back(X[i]);
+    }
+
+    fStatus = kDataLoaded;
 }
 
-bool perceptron::infere()
-{
-  if(fStatus==kReady){
 
-    auto product=std::inner_product(fInputs.begin(), fInputs.end(),fWeights.begin()+1, 0.0);
-    product+=fWeights[0];
+void Perceptron::fit() {
+    if(fStatus<1){
+        std::cerr<<"Data not loaded in Perceptron" << fID;
+        return;
+    }
 
-    fOutput=potentials::step(product);
-
-    return true;
-
-  } else return false;
+    fSignal = std::inner_product(fInputs.begin(),fInputs.end(),fW.begin()+1,fW[0]);
+    fX = fTheta(fSignal);
+    fThetaprime = fTheta_d(fSignal);
+    fStatus = kTrained;
 }
 
-void perceptron::update(double expected)
-{
-    auto tempInputs = fInputs;
-    std::for_each(tempInputs.begin(), tempInputs.end(), [](int &el){el *= expected; });
-    fWeights[0]+=expected;
-    std::transform (fWeights.begin()+1, fWeights.end(), tempInputs.begin(), fWeights.begin(), std::plus<double>());
+
+double Perceptron::getOutputX() {
+    if (fStatus<2) fit();
+    return fX;
 }
 
-bool perceptron::check(double expected, double variance)
-{
-  infere();
-  bool isOk = abs(expected-fOutput)<variance;
 
-  if(isOk || fIterations>kMaxIterations) return false;
-  else {
-    update(expected);
-    return true;
-  }
+double Perceptron::getOutputtheta_d() {
+    return fThetaprime;
 }
 
-void perceptron::train(std::vector<std::pair<std::vector<double>, double[2]>> dataSet)
-{
-  for(size_t iData=0; iData<dataSet.size(); iData++){
-    if(iData==0) fIterations++;
-    fInputs = dataSet[iData].first;
-    if (check(dataSet[iData].second[0],dataSet[iData].second[1])) iData = 0;
-  }
+void Perceptron::predict(std::vector<double> X) {
+    if (fStatus < 2) fit();
+//TODO
 }
 
-void perceptron::communicate()
-{
-  for(const auto & itID : fOutputConnections){
-    auto i = globalMap[itID];
-    i.setInput(fID,fOutput);
-  }
+void Perceptron::toOstream(){
+    printf("neuron id: %llu\n",fID);
 }
+
+void Perceptron::updateWeights() {
+    fW[0]+=-fLearningRate*fdelta;
+    for(size_t i = 1; i< fW.size(); i++){
+        fW[i] += -fLearningRate * fdelta * fInputs[i];
+    }
+}
+

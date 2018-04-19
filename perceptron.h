@@ -1,66 +1,66 @@
 //
-// Created by Gabriele Gaetano Fronzé on 05/03/2018.
+// Created by Filippo Valle on 17/04/2018.
 //
 
-#ifndef NEURALC_PERCEPTRON_H
-#define NEURALC_PERCEPTRON_H
+#ifndef NEURALNET_PERCEPTRON_H
+#define NEURALNET_PERCEPTRON_H
 
-enum status{
-    kNotReady,
-    kReady,
-    kRunning,
-    kDone
-};
-
+#include <iostream>
 #include <utility>
 #include <vector>
-#include <random>
-#include <unordered_map>
-#include "potentials.h"
+#include <numeric>
+#include <cmath>
+
 #include "pcg_random.hpp"
 
-uint32_t kMaxIterations = 10000;
-
-class perceptron
-{
-  public:
-    perceptron(uint64_t ID,
-               std::vector<uint64_t> InputConnections,
-               std::vector<uint64_t> OutputConnections,
-               uint32_t seed=777,
-               uint32_t stream=1);
-
-    //Setters
-    void setInput(uint64_t id, double value);
-
-    //Getters
-    inline uint64_t getFID() const { return fID; }
-    inline const std::vector<uint64_t> &getFInputConnections() const { return fInputConnections; }
-    inline const std::vector<uint64_t> &getFOutputConnections() const { return fOutputConnections; }
-    inline const std::vector<double> &getFWeights() const { return fWeights; }
-    inline status getFStatus() const { return fStatus; }
-    inline double getFOutput() const { return fOutput; }
-
-    //Operative methods
-    bool infere();
-    void communicate();
-
-    //Train methods
-    void update(double expected);
-    bool check(double expected, double variance);
-    void train(std::vector<std::pair<std::vector<double>,double[2]>> dataSet);
-
-  private:
-    uint64_t fID;
-    std::vector<uint64_t> fInputConnections;
-    std::vector<double> fInputs;
-    double fOutput;
-    std::vector<uint64_t> fOutputConnections;
-    std::vector<double> fWeights;
-    status fStatus;
-    uint32_t fIterations;
+enum PerceptronStatuses{
+    kReady,
+    kDataLoaded,
+    kTrained,
+    kBackProp
 };
 
-std::unordered_map<uint64_t,perceptron> globalMap;
+typedef double (*theta_function)(double);
+typedef std::vector<double> datatype;
 
-#endif //NEURALC_PERCEPTRON_H
+
+class Perceptron {
+public:
+    Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta, theta_function theta_d,
+                   double learningRate = 0.01, uint64_t seed = 42);
+
+    void setInput(const std::vector<double> &X);
+    void updateWeights();
+    void fit();
+    void predict(std::vector<double> X);
+    void toOstream();
+    inline void setDelta(double delta){fdelta = delta;};
+
+
+    uint64_t fID;
+    std::vector<double> fInputs;
+    std::vector<double> fW;
+    double fdelta;
+
+    double getOutputX();
+    double getOutputtheta_d();
+
+
+
+private:
+    PerceptronStatuses fStatus;
+
+    double fSignal;
+    double fX; //theta of (fSignal)
+    double fThetaprime; //theta_d of (fSignal)
+    double fLearningRate;
+
+    uint64_t fNumOfData;
+    uint64_t fNumOfFeatures;
+
+    theta_function fTheta;
+    theta_function fTheta_d;
+
+};
+
+#endif //NEURALNET_PERCEPTRON_H
