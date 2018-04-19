@@ -1,80 +1,77 @@
 //
-// Created by Gabriele Gaetano Fronzé on 05/03/2018.
+// Created by Filippo Valle on 17/04/2018.
 //
 
-#include "perceptron.h"
-#include "potentials.h"
+#include "Perceptron.h"
 
-perceptron::perceptron(uint64_t ID,
-                       double learningRate,
-                       uint32_t seed=777,
-                       uint32_t stream=1)
-  : fID(ID),
-    fLearningRate(learningRate),
-    fIterations(0),
-    fIndex(0),
-    fRNG(seed,stream),
-    fDistribution(0.0,1.0)
+Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta, theta_function theta_d,
+                       double learningRate, uint64_t seed)
+        :
+        fID(id),
+        fNumOfData(numOfFeatures),
+        fLearningRate(learningRate),
+        fStatus(kReady),
+        fNumOfFeatures(numOfFeatures),
+        fTheta(theta),
+        fTheta_d(theta_d)
 {
-  fWeights.push_back(fDistribution(fRNG));
+    pcg32_fast myRng(seed);
+    std::uniform_int_distribution<double> distribution(0.,1.);
+
+    fW.reserve(fNumOfFeatures+1);
+
+    //add vapnick dimension and random init w
+    for(int i=0;i<fNumOfFeatures+1;i++){
+        fW.push_back(distribution(myRng));
+    }
+}
+
+void Perceptron::setInput(const std::vector<double> &X) {
+    fInputs.reserve(fNumOfData);
+    for (size_t i = 0; i < fNumOfData; ++i) {
+        fInputs.emplace_back(X[i]);
+    }
+
+    fStatus = kDataLoaded;
 }
 
 
-void perceptron::setInput(uint64_t senderID, double value)
-{
+void Perceptron::fit() {
+    if(fStatus<1){
+        std::cerr<<"Data not loaded in Perceptron" << fID;
+        return;
+    }
 
-  if(fInputIdCorrelationMap.find(senderID) == fInputIdCorrelationMap.end()){
-    fFwdInputs.push_back(value);
-    fWeights.push_back(fDistribution(fRNG));
-    fInputIdCorrelationMap.emplace(std::make_pair(senderID,fIndex++));
-  } else {
-    fFwdInputs[fInputIdCorrelationMap[senderID]]=value;
-  }
+    fSignal = std::inner_product(fInputs.begin(),fInputs.end(),fW.begin()+1,fW[0]);
+    fX = fTheta(fSignal);
+    fThetaprime = fTheta_d(fSignal);
+    fStatus = kTrained;
 }
 
 
-void perceptron::setCorrection(uint64_t senderID, double value)
-{
-  fDeltaWeightSum+=value;
+double Perceptron::getOutputX() {
+    if (fStatus<2) fit();
+    return fX;
 }
 
-bool perceptron::infere()
-{
-  auto product=std::inner_product(fFwdInputs.begin(), fFwdInputs.end(),fWeights.begin()+1, 0.0);
-  product+=fWeights[0];
 
-  fOutput=potentials::step(product);
-
-  return true;
+double Perceptron::getOutputtheta_d() {
+    return fThetaprime;
 }
 
-void perceptron::update()
-{
-  double quadFwdInputs=std::accumulate(fFwdInputs.begin(),
-                                       fFwdInputs.end(),
-                                       0.,
-                                       [](double sum_so_far, double x)->double {
-                                         return sum_so_far + x * x;
-                                       });
-  double delta=(1-quadFwdInputs)*fDeltaWeightSum;
-  double deltaeta=delta*fLearningRate;
-
-
-  fCorrections.push_back(1.);
-  fCorrections.insert(fFwdInputs.begin(),fFwdInputs.end(),fCorrections.end());
-  std::for_each(fCorrections.begin(),fCorrections.end(),[deltaeta](double &el){el *= -deltaeta;});
-  std::transform(fWeights.begin(), fWeights.end(), fCorrections.begin(), fWeights.begin(), std::plus<double>());
-
-  fBckInputs=fWeights;
-  std::for_each(fBckInputs.begin(),fBckInputs.end(),[delta](double &el){el *= delta;});
+void Perceptron::predict(std::vector<double> X) {
+    if (fStatus < 2) fit();
+//TODO
 }
 
-//void perceptron::update(double expected)
-//{
-//  fDeltaWeightSum.resize(0);
-//  fDeltaWeightSum.push_back(expected);
-//  fDeltaWeightSum.insert(fFwdInputs.begin(),fFwdInputs.end(),fDeltaWeightSum.end());
-//  std::for_each(fDeltaWeightSum.begin()+1, fDeltaWeightSum.end(), [](double &el){el *= expected;});
-//  std::transform(fWeights.begin(), fWeights.end(), fDeltaWeightSum.begin(), fWeights.begin(), std::plus<double>());
-//}
+void Perceptron::toOstream(){
+    printf("neuron id: %llu\n",fID);
+}
+
+void Perceptron::updateWeights() {
+    fW[0]+=-fLearningRate*fdelta;
+    for(size_t i = 1; i< fW.size(); i++){
+        fW[i] += -fLearningRate * fdelta * fInputs[i];
+    }
+}
 

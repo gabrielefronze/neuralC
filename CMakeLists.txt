@@ -1,15 +1,18 @@
-cmake_minimum_required(VERSION 3.9)
-project(neuralC)
+cmake_minimum_required(VERSION 3.10)
+project(NeuralNet)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
-include_directories(.
-                    ./pcg)
-
-add_executable(
-        potentials.h
-        perceptron.h
-        perceptron.cxx
-        topology.h
-        topology.cxx
+include_directories(
+        .
+        pcg/.
 )
+
+add_executable(NeuralNet
+        main.cpp
+        NeuralNet.cxx
+        Layer.cxx
+        Perceptron.cxx
+        )
+
+add_subdirectory(tests/)
