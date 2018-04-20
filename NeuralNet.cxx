@@ -4,7 +4,7 @@
 
 #include "NeuralNet.h"
 
-NeuralNet::NeuralNet() : fDepth(0), fmaxiterations(10) {
+NeuralNet::NeuralNet() : fDepth(0), fmaxiterations(1000) {
 //TODO
 }
 
@@ -42,29 +42,31 @@ NeuralNet & NeuralNet::train() {
         for (auto &data : fX) {
             iData++;
             //fwd propagate
-
-            //set global input as input for first layer
-            for (auto &neuron : fLayers[0].fNeurons) {
-                neuron.setInput(data);
-            }
-
-            for (auto layer = fLayers.begin() + 1; layer != fLayers.end(); layer++) {
-                auto outputs = (layer - 1)->getOutputs();
-
-                for (auto &neuron : layer->fNeurons) {
-                    neuron.setInput(outputs);
-                    neuron.fit();
-                }
-            }
+             propagate(data);
 
             //backpropagate
-            double deltaLast = 0.;
-            double XLast = fLayers[fDepth].fNeurons[0].getOutputX();
-            double thetaprimeLast = fLayers[fDepth].fNeurons[0].getOutputtheta_d();
-            deltaLast += 2 * (XLast - fy[iData]) * thetaprimeLast;
-            fLayers[fDepth].fNeurons[0].setDelta(deltaLast);
+            backPropagate(iData);
 
-            for (size_t l = fDepth - 1; l > 0; l--) {
+            //update
+            for (auto &layer: fLayers) {
+                layer.updateWeigths();
+            }
+
+
+        }
+    }
+
+    return *this;
+}
+
+void NeuralNet::backPropagate(int iData) {
+    double deltaLast = 0.;
+    double XLast = fLayers[fDepth].fNeurons[0].getOutputX();
+    double thetaprimeLast = fLayers[fDepth].fNeurons[0].getOutputtheta_d();
+    deltaLast += 2 * (XLast - fy[iData]) * thetaprimeLast;
+    fLayers[fDepth].fNeurons[0].setDelta(deltaLast);
+
+    for (size_t l = fDepth - 1; l > 0; l--) {
                 auto layer = fLayers[l];
                 auto nextLayer = fLayers[l + 1];
 
@@ -78,17 +80,28 @@ NeuralNet & NeuralNet::train() {
                     neuron.setDelta(delta);
                 }
             }
+}
 
-//update
-            for (auto &layer: fLayers) {
-                layer.updateWeigths();
+void NeuralNet::propagate(const datatype &data) {
+    //set global input as input for first layer
+    for (auto &neuron : fLayers[0].fNeurons) {
+                neuron.setInput(data);
             }
 
+    for (auto layer = fLayers.begin() + 1; layer != fLayers.end(); layer++) {
+                auto outputs = (layer - 1)->getOutputs();
 
-        }
-    }
+                for (auto &neuron : layer->fNeurons) {
+                    neuron.setInput(outputs);
+                    neuron.fit();
+                }
+            }
+}
 
-    return *this;
+double NeuralNet::infere(std::vector<double> &X){
+    propagate(X);
+
+    return fLayers[fDepth][0].getOutputX();
 }
 
 NeuralNet & NeuralNet::toOstream() {

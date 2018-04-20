@@ -16,8 +16,9 @@ public:
     NeuralNet &addLayer(uint64_t numOfNeurons);
     NeuralNet &lastLayer(const std::vector<double> &y);
     NeuralNet & toOstream();
-
     NeuralNet & train();
+
+    double infere(std::vector<double> &X);
 
     uint64_t fmaxiterations;
 private:
@@ -25,6 +26,9 @@ private:
     std::vector<datatype> fX;
     std::vector<double> fy;
     std::vector<Layer> fLayers;
+
+    void propagate(const datatype &data);
+    void backPropagate(int iData);
 };
 
 
