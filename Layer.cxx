@@ -8,7 +8,7 @@ Layer::Layer(uint64_t numOfNeurons, uint64_t numOfFeatures) : fnumOfNeurons(numO
     fNeurons.reserve(numOfNeurons);
 
     for(uint64_t i = 0; i < numOfNeurons; i++){
-        fNeurons.emplace_back(Perceptron(i, numOfFeatures, +[](double x) { return atan(x); }, +[](double x) { return 1./(1+x*x); }));
+        fNeurons.emplace_back(Perceptron(i, numOfFeatures, +[](double x) { return tanh(x); }, +[](double x) { return 1.+ tanh(x) * tan(x); }));
     }
 }
 
