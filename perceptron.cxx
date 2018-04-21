@@ -16,7 +16,7 @@ Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta
         fTheta_d(theta_d)
 {
     pcg32_fast myRng(seed);
-    std::uniform_int_distribution<double> distribution(0.,1.);
+    std::uniform_real_distribution<double> distribution(0.,1.);
 
     fW.reserve(fNumOfFeatures+1);
 
@@ -27,6 +27,7 @@ Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta
 }
 
 void Perceptron::setInput(const std::vector<double> &X) {
+    fInputs.clear();
     fInputs.reserve(fNumOfData);
     for (size_t i = 0; i < fNumOfData; ++i) {
         fInputs.emplace_back(X[i]);

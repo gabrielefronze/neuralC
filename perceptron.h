@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include <numeric>
+#include <random>
 #include <cmath>
 
 #include "pcg_random.hpp"

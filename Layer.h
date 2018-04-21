@@ -15,9 +15,11 @@ public:
 
     std::vector<double> getOutputs();
     std::vector<Perceptron> fNeurons;
-    void updateWeigths();
 
+    void updateWeigths();
     void toOstream();
+
+    inline Perceptron &operator[](uint64_t neuron){return fNeurons[neuron];};
 private:
     uint64_t fnumOfNeurons;
 };
