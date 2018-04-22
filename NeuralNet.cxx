@@ -4,8 +4,8 @@
 
 #include "NeuralNet.h"
 
-NeuralNet::NeuralNet() : fDepth(0), fmaxiterations(5000), fLearningRate(0.1) {
-//TODO
+NeuralNet::NeuralNet() : fDepth(0), fmaxiterations(5000), fLearningRate(0.1), fEpsilon(0.00001){
+
 }
 
 NeuralNet &NeuralNet::firstLayer(uint64_t numOfNeurons, const std::vector<datatype> &input) {
@@ -37,29 +37,54 @@ NeuralNet &NeuralNet::lastLayer(const std::vector<double> &y) {
 }
 
 NeuralNet & NeuralNet::train() {
-    for(size_t step = 0; step <= fmaxiterations; step++) {
-        int iData = -1;
-        for (auto &data : fX) {
-            iData++;
-            //fwd propagate
-            propagate(data);
+    double error;
+    std::random_device rd;
+    std::default_random_engine e1(rd());
+    std::uniform_int_distribution<uint64_t > uniform_dist(0, fX.size()-1);
+    for (uint64_t step = 0; step < fmaxiterations; step++) {
+        //uint64_t iData = step % fX[0].size();
+        uint64_t iData = uniform_dist(e1);
+        auto data = fX[iData];
+        //fwd propagate
+        propagate(data);
 
-            //backpropagate
-            backPropagate(iData);
+        //backpropagate
+        backPropagate(iData);
 
-            //update
-            for (auto &layer: fLayers) {
-                layer.updateWeigths();
+        //update
+        for (auto &layer: fLayers) {layer.updateWeigths();}
+
+        error = getInSampleError();
+        if(step>0) {
+            if (error > fError) {
+                //printf("\n errore:%f", error);
+                for (auto &layer: fLayers) {layer.restoreWeigths(); }
+                continue;
             }
-
-
+            if ((fError - error) < fEpsilon) break;
         }
+
+        fError = error;
+
+        printf("\nstep: %llu/%llu\t\tError: %f", step, fmaxiterations, error);
     }
 
     return *this;
 }
 
-void NeuralNet::backPropagate(int iData) {
+
+double NeuralNet::getInSampleError() {
+    double_t error = 0.;
+    for(int iData=0; iData < fX.size(); iData++){
+        propagate(fX[iData]);
+        //printf("\n%f\t%f    %d",fLayers[fDepth][0].getOutputX(), fy[iData], iData );
+        error+= (fLayers[fDepth][0].getOutputX()-fy[iData]) * (fLayers[fDepth][0].getOutputX()-fy[iData]);
+    }
+    error*=1./(double)fX.size();
+    return error;
+}
+
+void NeuralNet::backPropagate(uint64_t iData) {
     double deltaLast = 0.;
     double XLast = fLayers[fDepth].fNeurons[0].getOutputX();
     double thetaprimeLast = fLayers[fDepth].fNeurons[0].getOutputtheta_d();

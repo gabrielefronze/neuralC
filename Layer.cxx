@@ -41,3 +41,9 @@ void Layer::updateWeigths() {
         neuron.updateWeights();
     }
 }
+
+void Layer::restoreWeigths() {
+    for(auto &neuron : fNeurons){
+        neuron.restoreWeights();
+    }
+}

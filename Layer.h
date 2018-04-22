@@ -17,6 +17,7 @@ public:
     std::vector<Perceptron> fNeurons;
 
     void updateWeigths();
+    void restoreWeigths();
     void toOstream();
 
     inline Perceptron &operator[](uint64_t neuron){return fNeurons[neuron];};

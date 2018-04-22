@@ -19,17 +19,20 @@ public:
     NeuralNet & train();
 
     double infere(std::vector<double> &X, bool continuos = false);
+    double getInSampleError();
 
     uint64_t fmaxiterations;
 private:
     uint64_t fDepth;
     double_t fLearningRate;
+    double_t fError;
+    double_t fEpsilon;
     std::vector<datatype> fX;
     std::vector<double> fy;
     std::vector<Layer> fLayers;
 
     void propagate(const datatype &data);
-    void backPropagate(int iData);
+    void backPropagate(uint64_t iData);
 };
 
 

@@ -32,6 +32,7 @@ public:
 
     void setInput(const std::vector<double> &X);
     void updateWeights();
+    void restoreWeights();
     void fit();
     void predict(std::vector<double> X);
     void toOstream();
@@ -41,6 +42,7 @@ public:
     uint64_t fID;
     std::vector<double> fInputs;
     std::vector<double> fW;
+    std::vector<double> fW_stored;
     double fdelta;
 
     double getOutputX();

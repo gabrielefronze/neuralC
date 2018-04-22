@@ -48,7 +48,7 @@ TEST(net_Test, net_test_train) {
     EXPECT_EQ(0, 0);
 }
 
-std::function<double (std::vector<double>)> targetf =  [](std::vector<double> x){return (2*x[0]+ x[1] >0?-1:1);};
+std::function<double (std::vector<double>)> targetf =  [](std::vector<double> x){return (x[0] + 2*x[1] >0?-1:1);};
 NeuralNet createandtrain(){
     std::vector<std::vector<double>> X;
     std::vector<double> y;
@@ -62,14 +62,16 @@ NeuralNet createandtrain(){
         }
     }
     NeuralNet net;
-    net.firstLayer(3, X).addLayer(4).lastLayer(y);
+    net.firstLayer(3, X).addLayer(5).lastLayer(y);
     net.train();
+    printf("\nAccuracy of the net: %f",net.getInSampleError());
     return net;
 }
 
 TEST(net_Test, net_test_graphics) {
     NeuralNet net = createandtrain();
 
+    printf("\n*********************\n\n");
     for (int i = -10; i < 10; i+=2) {
         for (int j = -10; j < 10; j+=2) {
             std::vector<double> x;
@@ -87,8 +89,8 @@ TEST(net_Test, net_test_graphics) {
             std::vector<double> x;
             x.push_back(i);
             x.push_back(j);
-           printf("%d", net.infere(x, false) ==1 ? 1 : 0);
-//            printf("%f", net.infere(x, false));
+            printf("%d", net.infere(x, false) ==1 ? 1 : 0);
+//          printf("%f", net.infere(x, true));
 
         }
         printf("\n");
