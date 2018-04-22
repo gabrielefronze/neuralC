@@ -5,20 +5,21 @@
 #include "Perceptron.h"
 
 Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta, theta_function theta_d,
-                       double learningRate, uint64_t seed)
+                       double learningRate, uint64_t seed, uint64_t stream)
         :
         fID(id),
-        fNumOfData(numOfFeatures),
         fLearningRate(learningRate),
         fStatus(kReady),
         fNumOfFeatures(numOfFeatures),
         fTheta(theta),
         fTheta_d(theta_d)
 {
-    pcg32_fast myRng(seed);
-    std::uniform_real_distribution<double> distribution(0.,1.);
+    pcg32 myRng(seed, stream);
+    std::uniform_real_distribution<double> distribution(-0.5,0.5);
 
     fW.reserve(fNumOfFeatures+1);
+    fW_stored.reserve(fNumOfFeatures+1);
+
 
     //add vapnick dimension and random init w
     for(int i=0;i<fNumOfFeatures+1;i++){
@@ -28,18 +29,17 @@ Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta
 
 void Perceptron::setInput(const std::vector<double> &X) {
     fInputs.clear();
-    fInputs.reserve(fNumOfData);
-    for (size_t i = 0; i < fNumOfData; ++i) {
+    fInputs.reserve(fNumOfFeatures);
+    for (size_t i = 0; i < fNumOfFeatures; ++i) {
         fInputs.emplace_back(X[i]);
     }
-
     fStatus = kDataLoaded;
 }
 
 
 void Perceptron::fit() {
     if(fStatus<1){
-        std::cerr<<"Data not loaded in Perceptron" << fID;
+        std::cerr<<"Data not loaded in Perceptron " << fID <<std::endl;
         return;
     }
 
@@ -70,9 +70,20 @@ void Perceptron::toOstream(){
 }
 
 void Perceptron::updateWeights() {
+    for(size_t i = 0; i< fW.size(); i++) {
+    fW_stored[i]=fW[i];
+    }
+
     fW[0]+=-fLearningRate*fdelta;
     for(size_t i = 1; i< fW.size(); i++){
         fW[i] += -fLearningRate * fdelta * fInputs[i];
     }
+    fStatus = kReady;
 }
 
+void Perceptron::restoreWeights(){
+    //std::copy(fW_stored.begin(),fW_stored.end(),fW.begin());
+    for(size_t i = 0; i< fW.size(); i++) {
+        fW[i]=fW_stored[i];
+    }
+}
