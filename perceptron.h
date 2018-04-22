@@ -28,7 +28,7 @@ typedef std::vector<double> datatype;
 class Perceptron {
 public:
     Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta, theta_function theta_d,
-                   double learningRate = 0.01, uint64_t seed = 42);
+                   double learningRate, uint64_t seed, uint64_t stream);
 
     void setInput(const std::vector<double> &X);
     void updateWeights();
@@ -56,7 +56,6 @@ private:
     double fThetaprime; //theta_d of (fSignal)
     double fLearningRate;
 
-    uint64_t fNumOfData;
     uint64_t fNumOfFeatures;
 
     theta_function fTheta;

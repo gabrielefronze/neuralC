@@ -18,11 +18,12 @@ public:
     NeuralNet & toOstream();
     NeuralNet & train();
 
-    double infere(std::vector<double> &X);
+    double infere(std::vector<double> &X, bool continuos = false);
 
     uint64_t fmaxiterations;
 private:
     uint64_t fDepth;
+    double_t fLearningRate;
     std::vector<datatype> fX;
     std::vector<double> fy;
     std::vector<Layer> fLayers;

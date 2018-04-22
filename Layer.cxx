@@ -4,11 +4,13 @@
 
 #include "Layer.h"
 
-Layer::Layer(uint64_t numOfNeurons, uint64_t numOfFeatures) : fnumOfNeurons(numOfNeurons) {
+Layer::Layer(uint64_t numOfNeurons, uint64_t numOfFeatures, double learningRate, uint64_t stream)
+        : fnumOfNeurons(numOfNeurons) {
     fNeurons.reserve(numOfNeurons);
 
     for(uint64_t i = 0; i < numOfNeurons; i++){
-        fNeurons.emplace_back(Perceptron(i, numOfFeatures, +[](double x) { return tanh(x); }, +[](double x) { return 1.+ tanh(x) * tan(x); }));
+        fNeurons.emplace_back(Perceptron(i, numOfFeatures, +[](double x) { return tanh(x); },
+                                         +[](double x) { return 1. / (cosh(x) * cosh(x)); }, learningRate, 42, stream*i));
     }
 }
 
@@ -23,7 +25,7 @@ std::vector<double> Layer::getOutputs() {
     return output;
 }
 
-InputLayer::InputLayer(uint64_t numOfNeurons, uint64_t inputSize) : Layer(numOfNeurons, inputSize) {
+InputLayer::InputLayer(uint64_t numOfNeurons, uint64_t inputSize, double learningRate, uint64_t stream) : Layer(numOfNeurons, inputSize, learningRate, stream) {
 
 }
 
