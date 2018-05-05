@@ -22,8 +22,8 @@ Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta
 
 
     //add vapnick dimension and random init w
-    for(int i=0;i<fNumOfFeatures+1;i++){
-        fW.push_back(distribution(myRng));
+    for(uint64_t i=0;i<fNumOfFeatures+1;i++){
+        fW.push_back(distribution(fRNG));
     }
 }
 
@@ -60,20 +60,11 @@ double Perceptron::getOutputtheta_d() {
     return fThetaprime;
 }
 
-void Perceptron::predict(std::vector<double> X) {
-    if (fStatus < 2) fit();
-//TODO
-}
-
 void Perceptron::toOstream(){
     printf("neuron id: %llu\n",fID);
 }
 
 void Perceptron::updateWeights() {
-    for(size_t i = 0; i< fW.size(); i++) {
-    fW_stored[i]=fW[i];
-    }
-
     fW[0]+=-fLearningRate*fdelta;
     for(size_t i = 1; i< fW.size(); i++){
         fW[i] += -fLearningRate * fdelta * fInputs[i];
@@ -81,9 +72,24 @@ void Perceptron::updateWeights() {
     fStatus = kReady;
 }
 
-void Perceptron::restoreWeights(){
-    //std::copy(fW_stored.begin(),fW_stored.end(),fW.begin());
+void Perceptron::freeze() {
+    fW_stored.clear();
     for(size_t i = 0; i< fW.size(); i++) {
-        fW[i]=fW_stored[i];
+        fW_stored.push_back(fW[i]);
+    }
+}
+
+void Perceptron::reset() {
+    std::uniform_real_distribution<double> distribution(-0.5,0.5);
+    for(uint64_t i=0;i<fNumOfFeatures+1;i++){
+        fW.push_back(distribution(fRNG));
+    }
+}
+
+void Perceptron::restoreWeights(){
+    fW.clear();
+    //std::copy(fW_stored.begin(),fW_stored.end(),fW.begin());
+    for(size_t i = 0; i< fW_stored.size(); i++) {
+        fW.push_back(fW_stored[i]);
     }
 }

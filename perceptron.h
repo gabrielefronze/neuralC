@@ -33,6 +33,8 @@ public:
     void setInput(const std::vector<double> &X);
     void updateWeights();
     void restoreWeights();
+    void freeze();
+    void reset();
     void fit();
     void predict(std::vector<double> X);
     void toOstream();

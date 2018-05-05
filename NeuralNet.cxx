@@ -37,6 +37,10 @@ NeuralNet &NeuralNet::lastLayer(const std::vector<double> &y) {
 }
 
 NeuralNet & NeuralNet::train() {
+    if(fStatus<1){
+        std::cerr<<"Dataset not loaded" <<std::endl;
+        return *this;
+    }
     double error;
     std::random_device rd;
     std::default_random_engine e1(rd());
@@ -52,7 +56,10 @@ NeuralNet & NeuralNet::train() {
         backPropagate(iData);
 
         //update
-        for (auto &layer: fLayers) {layer.updateWeigths();}
+        for (auto &layer: fLayers) {
+            layer.updateWeigths();
+            layer.freeze();
+        }
 
         error = getInSampleError();
         if(step>0) {
@@ -61,14 +68,24 @@ NeuralNet & NeuralNet::train() {
                 for (auto &layer: fLayers) {layer.restoreWeigths(); }
                 continue;
             }
-            if ((fError - error) < fEpsilon) break;
+            if (((error - fError) < fEpsilon)) {
+                if(ninit<fNinit){
+                    printf("\rREINIT weights at step: %llu\t\tError: %.4f", step, error);
+                    reset();
+                    ninit++;
+                }else {
+                    printf("\nFinal steps: %llu\t\tError: %.4f", step, error);
+                    break;
+                }
+            }
         }
 
         fError = error;
+        printf("\nstep: %llu/%llu\t\tError: %.4f", step, fmaxiterations, fError);
 
-        printf("\nstep: %llu/%llu\t\tError: %f", step, fmaxiterations, error);
     }
 
+    fStatus = net::netStatuses::kTrained;
     return *this;
 }
 
@@ -83,6 +100,16 @@ double NeuralNet::getInSampleError() {
     error*=1./(double)fX.size();
     return error;
 }
+
+double NeuralNet::getAccurancy() {
+    uint64_t guessed = 0;
+    for(int iData=0; iData < fX.size(); iData++){
+        if(fabs(infere(fX[iData])-fy[iData]) < fEpsilon) guessed++;
+    }
+    //printf("guessed: %llu",guessed);
+    return (double_t) guessed/(double)fX.size();
+}
+
 
 void NeuralNet::backPropagate(uint64_t iData) {
     double deltaLast = 0.;
@@ -126,10 +153,26 @@ void NeuralNet::propagate(const datatype &data) {
     }
 }
 
-double NeuralNet::infere(std::vector<double> &X, bool continuos) {
+double NeuralNet::infere(datatype &X, bool continuos) {
+    double output;
+
+    if(fStatus==net::netStatuses::kTrained) {
+        auto it = fCache.find(X);
+        if (it != fCache.end()) {
+            output = it->second;
+
+        } else {
     propagate(X);
 
-    auto output = fLayers[fDepth][0].getOutputX();
+            output = fLayers[fDepth][0].getOutputX();
+            fCache[X] = output;
+        }
+    }else{
+        std::cerr<<"Net not trained"<<std::endl;
+        train();
+        return infere(X, continuos);
+    }
+
     if(continuos) return output;
     else return output>0?1:-1;
 }
