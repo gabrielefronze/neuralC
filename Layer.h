@@ -11,6 +11,7 @@
 
 class Layer {
 public:
+    Layer(){};
     Layer(uint64_t numOfNeurons, uint64_t numOfFeatures, double learningRate, uint64_t stream);
 
     std::vector<double> getOutputs();
@@ -18,12 +19,19 @@ public:
 
     void updateWeigths();
     void restoreWeigths();
+    void freeze();
+    void reset();
     void toOstream();
 
     inline Perceptron &operator[](uint64_t neuron){return fNeurons[neuron];};
+    inline uint64_t size(){ return fNeurons.size();}
+
 private:
     uint64_t fnumOfNeurons;
 };
+
+
+
 
 class InputLayer: public Layer{
 public:

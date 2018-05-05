@@ -14,7 +14,7 @@ Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta
         fTheta(theta),
         fTheta_d(theta_d)
 {
-    pcg32 myRng(seed, stream);
+    fRNG = pcg32(seed, stream);
     std::uniform_real_distribution<double> distribution(-0.5,0.5);
 
     fW.reserve(fNumOfFeatures+1);

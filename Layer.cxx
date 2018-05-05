@@ -47,3 +47,15 @@ void Layer::restoreWeigths() {
         neuron.restoreWeights();
     }
 }
+
+void Layer::freeze() {
+    for(auto &neuron : fNeurons){
+        neuron.freeze();
+    }
+}
+
+void Layer::reset() {
+    for(auto &neuron : fNeurons){
+        neuron.reset();
+    }
+}

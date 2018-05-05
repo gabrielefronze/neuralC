@@ -4,15 +4,46 @@
 
 #include "NeuralNet.h"
 
-NeuralNet::NeuralNet() : fDepth(0), fmaxiterations(5000), fLearningRate(0.1), fEpsilon(0.00001){
+NeuralNet::NeuralNet() :
+        fDepth(0),
+        fmaxiterations(5000),
+        fLearningRate(0.1),
+        fEpsilon(0.001),
+        fNinit(100),
+        fStatus(net::netStatuses::kReady){
 
 }
+
 
 NeuralNet &NeuralNet::firstLayer(uint64_t numOfNeurons, const std::vector<datatype> &input) {
     fLayers.emplace_back(InputLayer(numOfNeurons, input[0].size(), fLearningRate, fDepth));
     fX = input;
-
+    fStatus = net::netStatuses::kDataloaded;
     return *this;
+}
+
+NeuralNet &NeuralNet::firstLayer(uint64_t numOfNeurons, const std::string datafilename) {
+    std::__1::fstream file(datafilename);
+    std::vector<datatype> input;
+
+    if (file.is_open()) {
+        std::__1::string line;
+        while (getline(file, line)) {
+            std::__1::istringstream s(line);
+            std::__1::string field;
+            std::vector<double> x;
+            while (getline(s, field, ',')) {
+                x.push_back(atof(field.c_str()));
+            }
+            input.push_back(x);
+        }
+    } else {
+        std::__1::cerr << "file " << datafilename << " not found";
+    }
+
+    file.close();
+
+    return firstLayer(numOfNeurons, input);
 }
 
 NeuralNet &NeuralNet::addLayer(uint64_t numOfNeurons) {
@@ -36,12 +67,31 @@ NeuralNet &NeuralNet::lastLayer(const std::vector<double> &y) {
     return *this;
 }
 
+
+NeuralNet &NeuralNet::lastLayer(std::string targetfilename) {
+    std::__1::fstream filetarget(targetfilename);
+    std::vector<double> output;
+
+    if (filetarget.is_open()) {
+        std::__1::string line;
+        while (getline(filetarget, line)) {
+            output.push_back(atof(line.c_str()));
+        }
+    } else {
+        std::__1::cerr << "file " << targetfilename << " not found";
+    }
+
+    filetarget.close();
+    return lastLayer(output);
+}
+
 NeuralNet & NeuralNet::train() {
     if(fStatus<1){
         std::cerr<<"Dataset not loaded" <<std::endl;
         return *this;
     }
     double error;
+    uint8_t ninit=0;
     std::random_device rd;
     std::default_random_engine e1(rd());
     std::uniform_int_distribution<uint64_t > uniform_dist(0, fX.size()-1);
@@ -162,7 +212,7 @@ double NeuralNet::infere(datatype &X, bool continuos) {
             output = it->second;
 
         } else {
-    propagate(X);
+            propagate(X);
 
             output = fLayers[fDepth][0].getOutputX();
             fCache[X] = output;
@@ -186,3 +236,40 @@ NeuralNet & NeuralNet::toOstream() {
     return *this;
 }
 
+NeuralNet &NeuralNet::infere(std::string testfilename) {
+    std::__1::fstream filetest(testfilename, std::ios::in);
+    const auto inferefilename = "infered.csv";
+    std::__1::fstream fileresult(inferefilename, std::ios::out);
+
+    std::vector<datatype> input;
+
+    if(fileresult.is_open()){
+        if (filetest.is_open()) {
+            std::__1::string line;
+            while (getline(filetest, line)) {
+                std::__1::istringstream s(line);
+                std::__1::string field;
+                std::vector<double> x;
+                while (getline(s, field, ',')) {
+                    x.push_back(atof(field.c_str()));
+                }
+                auto infered = infere(x);
+                fileresult<<infered<<"\n";
+            }
+        } else {
+            std::__1::cerr << "file " << testfilename << " not found";
+        }
+    }else{
+        std::__1::cerr << "file " << inferefilename << " not opened";
+    }
+
+    filetest.close();
+    fileresult.close();
+    return *this;
+}
+
+void NeuralNet::reset() {
+    for(auto &layer : fLayers){
+        layer.reset();
+    }
+}
