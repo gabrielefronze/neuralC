@@ -16,3 +16,4 @@ add_executable(NeuralNet
         )
 
 add_subdirectory(tests/)
+add_subdirectory(XRayMachine/)
