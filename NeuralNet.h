@@ -10,6 +10,11 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+
+#if defined(_OPENMP)
+#include <omp.h>
+#endif
+
 #include "Layer.h"
 
 namespace net {
