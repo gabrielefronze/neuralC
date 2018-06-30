@@ -1,5 +1,5 @@
 # neuralC
-<img src="https://github.com/gabrielefronze/neuralC/raw/master/nn.png" height="250"></img>
+<img src="https://github.com/gabrielefronze/neuralC/raw/master/nn.jpg" height="250"></img>
 ## Neural Net
 ```cpp
   NeuralNet net;
@@ -15,7 +15,7 @@
 ## NeuralAnalyzer
 *NeuralAnalyzer* is able to generate dataset, test file and to plot all the data.
 
-You can copile it in *root* running 
+You can compile it in *root* running
 ```cpp
 .x compile.C
 ```
@@ -23,8 +23,8 @@ You can copile it in *root* running
 An example is in [run_plot.cxx](run_plot.cxx)
 
 ## XRayMachine
-*XRayMachine* plots the architecture design of the net simply 
-Example of usage is: 
+*XRayMachine* plots the architecture design of the net simply
+Example of usage is:
 ```cpp
 auto cx =  XRayMachine(net).fCanvas;
 ```
