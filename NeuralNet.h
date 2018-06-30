@@ -28,6 +28,8 @@ namespace net {
 class NeuralNet {
 public:
     NeuralNet();
+    NeuralNet(uint64_t iterations, double_t learningrate, double_t epsilon, uint64_t ninit,
+              double batchsize);
 
     NeuralNet &firstLayer(uint64_t numOfNeurons, const std::vector<std::vector<double>> &input);
     NeuralNet &firstLayer(uint64_t numOfNeurons, std::string datafilename);
@@ -35,7 +37,7 @@ public:
     NeuralNet &lastLayer(const std::vector<double> &y);
     NeuralNet &lastLayer(std::string targetfilename);
     NeuralNet & toOstream();
-    NeuralNet & train();
+    NeuralNet &train(bool storeErrordata);
 
     NeuralNet& infere(std::string testfilename);
     double infere(datatype &X, bool continuos = false);
@@ -53,7 +55,9 @@ private:
     double_t fLearningRate;
     double_t fError;
     double_t fEpsilon;
-    uint8_t  fNinit;
+    double_t fBatchSize;
+    uint64_t  fNinit;
+    uint64_t fSeed;
     std::vector<datatype> fX;
     std::vector<double> fy;
     std::vector<Layer> fLayers;
@@ -62,6 +66,8 @@ private:
     void propagate(const datatype &data);
     void backPropagate(uint64_t iData);
     void reset();
+    void clearErrorFile();
+    void addErrorToFile(double error);
 
     net::netStatuses fStatus;
 };
