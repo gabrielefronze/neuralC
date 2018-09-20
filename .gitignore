@@ -31,3 +31,7 @@ NeuralNet
 *.a
 *.csv
 tests/lib/googletest-master/googlemock/
+
+*.gch
+
+\.vscode/

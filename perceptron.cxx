@@ -3,6 +3,7 @@
 //
 
 #include "Perceptron.h"
+#include <algorithm>
 
 Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta, theta_function theta_d,
                        double learningRate, uint64_t seed, uint64_t stream)
@@ -25,16 +26,16 @@ Perceptron::Perceptron(uint64_t id, uint64_t numOfFeatures, theta_function theta
     fW_stored.reserve(fNumOfFeatures+1);
 
     //add vapnick dimension and random init w
-    for(uint64_t i=0;i<fNumOfFeatures+1;i++){
-        fW.push_back(distribution(fRNG));
-    }
+    std::for_each(std::begin(fW), std::end(fW), [&](double &d){
+        d = std::move(distribution(fRNG));
+    });
 }
 
 void Perceptron::setInput(const std::vector<double> &X) {
     fInputs.clear();
     fInputs.reserve(fNumOfFeatures);
     for (size_t i = 0; i < fNumOfFeatures; ++i) {
-        fInputs.emplace_back(X[i]);
+        fInputs[i] = X[i];
     }
     fStatus = kDataLoaded;
 }
@@ -69,16 +70,21 @@ void Perceptron::toOstream(){
 
 void Perceptron::updateWeights() {
     fW[0]+=-fLearningRate*fdelta;
-    for(size_t i = 1; i< fW.size(); i++){
-        fW[i] += -fLearningRate * fdelta * fInputs[i];
-    }
+
+    auto M = -fLearningRate * fdelta;
+
+    auto fInputsCopy(fInputs);
+    std::transform(fInputsCopy.begin(), fInputsCopy.end(), fInputsCopy.begin(), std::bind(std::multiplies<double>(), std::placeholders::_1, M));
+    std::transform(fW.begin(), fW.end(), fInputsCopy.begin(), fW.begin(), std::plus<double>());
+
     fStatus = kReady;
 }
 
 void Perceptron::freeze() {
     fW_stored.clear();
+    fW_stored.reserve(fW.size());
     for(size_t i = 0; i< fW.size(); i++) {
-        fW_stored.push_back(fW[i]);
+        fW_stored[i] = fW[i];
     }
 }
 
@@ -86,15 +92,14 @@ void Perceptron::reset() {
     std::uniform_real_distribution<double> distribution(-1,1);
     fW.clear();
     fW.reserve(fNumOfFeatures+1);
-    for(uint64_t i=0;i<fNumOfFeatures+1;i++){
-        fW.push_back(distribution(fRNG));
-    }
+    std::for_each(std::begin(fW), std::end(fW), [&](double &d){
+        d = std::move(distribution(fRNG));
+    });
 }
 
 void Perceptron::restoreWeights(){
     fW.clear();
-    //std::copy(fW_stored.begin(),fW_stored.end(),fW.begin());
     for(size_t i = 0; i< fW_stored.size(); i++) {
-        fW.push_back(fW_stored[i]);
+        fW[i] = fW_stored[i];
     }
 }
