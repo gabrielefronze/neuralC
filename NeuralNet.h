@@ -16,6 +16,9 @@
 #endif
 
 #include "Layer.h"
+#include "SynapseLayer.h"
+#include "Synapse.h"
+
 
 namespace net {
     enum netStatuses {
@@ -61,6 +64,7 @@ private:
     std::vector<datatype> fX;
     std::vector<double> fy;
     std::vector<Layer> fLayers;
+    std::vector<SynapseLayer> fSynapses;
     std::map<datatype, double> fCache;
 
     void propagate(const datatype &data);

@@ -23,6 +23,8 @@ add_executable(NeuralNet
         NeuralNet.cxx
         Layer.cxx
         Perceptron.cxx
+        Synapse.cxx
+        SynapseLayer.cxx
         )
 
 

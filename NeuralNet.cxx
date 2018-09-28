@@ -63,7 +63,9 @@ NeuralNet &NeuralNet::addLayer(uint64_t numOfNeurons) {
 
     //number of input is the number of neurons in previous layer
     uint64_t numOfInputs = fLayers[fDepth].fNeurons.size();
+    uint64_t numOfSynapses = numOfInputs * numOfNeurons;
 
+    fSynapses.emplace_back(SynapseLayer(numOfSynapses, fDepth));
     fLayers.emplace_back(Layer(numOfNeurons, numOfInputs, fLearningRate, fSeed, ++fDepth));
 
     return *this;

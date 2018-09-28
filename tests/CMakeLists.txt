@@ -1,5 +1,5 @@
 project(net_test)
-# add_subdirectory(googletest)
+add_subdirectory(googletest)
 
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR}/)
 include_directories(
@@ -10,6 +10,8 @@ add_executable(net_test
         ${CMAKE_SOURCE_DIR}/NeuralNet.cxx
         ${CMAKE_SOURCE_DIR}/Layer.cxx
         ${CMAKE_SOURCE_DIR}/Perceptron.cxx
+        ${CMAKE_SOURCE_DIR}/Synapse.cxx
+        ${CMAKE_SOURCE_DIR}/SynapseLayer.cxx
         netTest.cxx)
 
 target_link_libraries(net_test gtest gtest_main)

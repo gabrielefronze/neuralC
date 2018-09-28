@@ -21,6 +21,8 @@ add_executable(xray
         ${CMAKE_SOURCE_DIR}/NeuralNet.cxx
         ${CMAKE_SOURCE_DIR}/run_xray.cxx
         ${CMAKE_SOURCE_DIR}/Mainroot.cxx
+        ${CMAKE_SOURCE_DIR}/Synapse.cxx
+        ${CMAKE_SOURCE_DIR}/SynapseLayer.cxx
         )
 
 target_link_libraries(xray XRayMachine)
